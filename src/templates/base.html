@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <title>Chat x Channels Rapidly</title>
+    {% include 'css.html' %}
+</head>
+<body>
+
+<div class='container'>
+    <div class='row border-bottom my-3 py-3'>
+        <div class='col'>
+            <h1 class='p-0 m-0'>Chat x Channels Rapidly</h1>
+        </div>
+    </div>
+{% block content %}
+{% endblock %}
+</div>
+
+{% include 'js.html' %}
+<script src='https://cdnjs.cloudflare.com/ajax/libs/reconnecting-websocket/1.0.0/reconnecting-websocket.js'></script>
+<script>
+console.log(window.location)
+var loc = window.location
+var formData = $("#form")
+var msgInput = $("#id_message")
+var chatHolder = $("#chat-items")
+var me = $("#myUsername").val()
+
+var wsStart = 'ws://'
+if(loc.protocal == 'https:'){
+	wsStart = 'wss://'
+}
+var endpoint = wsStart + loc.host + loc.pathname
+var socket = new ReconnectingWebSocket(endpoint)
+
+socket.onmessage = function(e) {
+	console.log("message", e)
+	var chatDataMsg = JSON.parse(e.data)
+	// chatHolder.append("<li>"+e.data+"</li>")
+	chatHolder.append("<li>"+chatDataMsg.message+" via "+chatDataMsg.username+"</li>")
+}
+socket.onopen = function(e) {
+	console.log("open", e)
+	formData.submit(function(event){
+		event.preventDefault()
+		var msgText = msgInput.val()
+		// chatHolder.append("<li>"+msgText+" via "+me+"</li>")
+		var finalData = {
+			'message': msgText
+		}
+		socket.send(JSON.stringify(finalData))
+		//msgInput.val('')
+		formData[0].reset()
+	})
+}
+socket.onerror = function(e) {
+	console.log("error", e)
+}
+socket.onclose = function(e) {
+	console.log("close", e)
+}
+</script>
+
+</body>
+</html>
